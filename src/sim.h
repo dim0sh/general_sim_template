@@ -23,10 +23,7 @@ base_sim_model *base_sim_model_init(
     int camera_mode
 );
 
-typedef struct DataModel {
-    int test;
-    float time;
-} data_model;
+typedef struct DataModel data_model;
 
 typedef struct SimModel {
     base_sim_model *base_model;

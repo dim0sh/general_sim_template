@@ -69,9 +69,11 @@ void sim_ui(sim_model *model) {
         /* process ui here... */
         mu_label(ctx, "Hello, raylib");
         
-        char label[20];
-        int j = snprintf(label, 20, "FPS:\t%d\n", GetFPS());
-        mu_label(ctx, label);
+        char label[10];
+        int fps_format_success = snprintf(label, 10, "FPS:\t%d\n", GetFPS());
+        if (fps_format_success) {
+            mu_label(ctx, label);
+        }
 
         if (mu_button(ctx, "The button")) {
             mu_open_popup(ctx, "popup");
@@ -127,6 +129,13 @@ void sim_destroy(sim_model *model) {
     free(model->base_model->ctx);
     free(model->base_model);
 }
+// ---
+// sim data
+// ---
+struct DataModel {
+    int test;
+    float time;
+};
 // ---
 // main loop
 // ---
