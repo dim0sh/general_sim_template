@@ -13,6 +13,7 @@ typedef struct Base_SIM_Model {
     Camera camera;
     int camera_mode;
     mu_Context *ctx;
+    Font font;
 } base_sim_model;
 
 base_sim_model *base_sim_model_init(
