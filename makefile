@@ -12,12 +12,12 @@ DYNARRAY_DIR := $(LIB_DIR)/dynarray
 MICROUI_DIR := $(LIB_DIR)/microui
 
 TARGET := $(BUILD_DIR)/$(EXEC)
-SRCS := $(DYNARRAY_DIR)/dynarray $(MICROUI_DIR)/microui 
-SRCS := $(SRCS) $(wildcard src/*.c)
-OBJ := $(SRCS:%=$(BUILD_DIR)/%.o)
 
+SRCS := $(wildcard $(DYNARRAY_DIR)/*.c) $(wildcard $(MICROUI_DIR)/*.c) $(wildcard $(SRC_DIRS)/*.c)
+OBJ := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
 CFLAGS := -std=c99 -Wall -Wextra -O3 -flto 
-INCLUDES := -I.$(LIB_DIR) -I.$(SRC_DIRS)
+
+INCLUDES := -I$(LIB_DIR) -I$(SRC_DIRS)
 LDINCLUDES :=  -L$(RAYLIB_DIR) -L$(TIMING_DIR)
 LDLIBS := -lraylib -ltimer -lm
 
@@ -29,11 +29,7 @@ $(TARGET): $(OBJ)
 
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/%.c.o: %.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 .PHONY: clean
 clean:
