@@ -1,7 +1,5 @@
-#include "../lib/dynarray/dynarray.h"
+#include <dynarray/dynarray.h>
 #include "sim.h"
-
-// #include "../lib/timer/timing.h"
 
 #include <stddef.h>
 #include <stdint.h>

@@ -1,9 +1,9 @@
 #ifndef SIM_H
 #define SIM_H
 
-#include "../lib/raylib/raylib.h"
-#include "../lib/raylib/rlgl.h"
-#include "../lib/microui/microui.h"
+#include <raylib/raylib.h>
+#include <raylib/rlgl.h>
+#include <microui/microui.h>
 
 typedef struct Base_SIM_Model {
     int fps;

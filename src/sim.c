@@ -1,7 +1,7 @@
 #include "sim.h"
-#include "../lib/dynarray/dynarray.h"
-#include "../lib/raylib/raymath.h"
-#include "ui_renderer.h"
+#include <dynarray/dynarray.h>
+#include <raylib/raymath.h>
+#include <microui_renderer/ui_renderer.h>
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -66,6 +66,7 @@ void sim_init(sim_model *model, bool cursor) {
     }
 
     murl_setup_font_ex(model->base_model->ctx, &model->base_model->font);
+    model->base_model->ctx->style->size.x = 300;
 }
 // ---
 // sim data
