@@ -74,6 +74,7 @@ struct DataModel {
     float time;
     float bg[3];
     float size[3];
+    dynarray_t * arr;
 };
 // ---
 // ui declaration
@@ -139,6 +140,8 @@ void sim_draw(sim_model *model) {
                 model->data_model->size[0], model->data_model->size[1], model->data_model->size[2], 
                 (Color){model->data_model->bg[0],model->data_model->bg[1],model->data_model->bg[2],255}
             );
+            Vector3 *vec = arr_get(Vector3, model->data_model->arr, 0);
+            DrawCube(*vec, 10, 10, 10, BLACK);
         EndMode3D();
         murl_render(model->base_model->ctx);
     EndDrawing();
@@ -168,6 +171,7 @@ void sim_window(sim_model *model) {
 }
 
 void sim_destroy(sim_model *model) {
+    arr_free(model->data_model->arr);
     /* unload font if it was loaded from file (GetFontDefault() shares system font texture) */
     if (model->base_model->font.texture.id != GetFontDefault().texture.id) {
         UnloadFont(model->base_model->font);
@@ -183,8 +187,11 @@ void sim_loop() {
         .test = 10,
         .time = 0.0,
         .bg = { 90, 95, 100 },
-        .size = {2.0,2.0,2.0}
+        .size = {2.0,2.0,2.0},
+        .arr = arr(Vector3),
     };
+    Vector3 vec = {10,10,10};
+    arr_push(Vector3, sim_data.arr, &vec);
 
     sim_model *model = sim_model_init(
         1000, 
