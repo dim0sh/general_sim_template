@@ -43,6 +43,7 @@ static inline void _array_set(size_t size, dynarray_t *arr, size_t idx, void *el
 }
 
 #define arr_with(Type, count, elem) (dynarray_t *)_array_init_with(sizeof(Type), count, elem)
+__attribute__((nonnull(3),malloc,warn_unused_result))
 static inline dynarray_t * _array_init_with(size_t size, size_t count, void * elem) {
     dynarray_t *ptr = _array_empty();
     ptr->data = (char *)malloc(size*count);
@@ -56,7 +57,11 @@ static inline dynarray_t * _array_init_with(size_t size, size_t count, void * el
 
 #define arr_foreach(Type, item, array) for (Type *item = (Type *)array->data; item < (Type *)(array->data + array->cnt * sizeof(Type)); item++)
 
-#define arr_filter(Type, item, array, condition) for (Type *item = (Type *)array->data; item < (Type *)(array->data + array->cnt * sizeof(Type)) && condition; item++)
+#define arr_filter(Type, item, array, condition) \
+    for (Type *item = (Type *)array->data; \
+         item < (Type *)(array->data + array->cnt * sizeof(Type)); \
+         item++) \
+        if (condition)
 
 __attribute__((nonnull(2)))
 static inline void _array_resize(size_t size, dynarray_t *arr, int direction, size_t init_capacity) {
@@ -88,6 +93,36 @@ static inline void _array_push(size_t size, dynarray_t *arr, void *elem, size_t 
     }
 }
 
+#define arr_free(array) _array_free(array)
+__attribute__((nonnull(1)))
+static inline void _array_free(dynarray_t *arr) {
+    free(arr->data);
+    free(arr);
+}
+
+#define arr_swap_remove(Type,array,index) _array_swap_remove(sizeof(Type),array,index, MIN_CAPACITY)
+__attribute__((nonnull(2)))
+static inline void _array_swap_remove(size_t size, dynarray_t *arr, size_t idx, size_t init_capacity) {
+    if (arr->cnt > 0) {
+        if (idx == arr->cnt-1) {
+            arr->cnt--;
+        } else if (idx < arr->cnt) {
+            char*ptr_dest = arr->data;
+            ptr_dest = ptr_dest + (idx * size);
+    
+            char*ptr_src = arr->data;
+            ptr_src = ptr_src + (arr->cnt-1)*size;
+    
+            memcpy(ptr_dest, ptr_src, size);
+            arr->cnt--;
+        }
+        if (arr->cnt < arr->capacity/3) {
+            _array_resize(size, arr, 0, init_capacity);
+        }
+    }
+
+}
+
 #define arr_pop(Type,array) (Type *)_array_pop(sizeof(Type), array, MIN_CAPACITY)
 __attribute__((warn_unused_result,nonnull(2)))
 static inline void *_array_pop(size_t size, dynarray_t *arr, size_t init_capacity) {
@@ -113,29 +148,6 @@ static inline void *_array_get(size_t size, dynarray_t *arr, size_t idx) {
 }
 
 #define arr_peek(Type,array) arr_get(Type,array,array->cnt-1)
-
-#define arr_swap_remove(Type,array,index) _array_swap_remove(sizeof(Type),array,index, MIN_CAPACITY)
-__attribute__((nonnull(2)))
-static inline void _array_swap_remove(size_t size, dynarray_t *arr, size_t idx, size_t init_capacity) {
-    if (arr->cnt > 0) {
-        if (idx == arr->cnt-1) {
-            arr->cnt--;
-        } else if (idx < arr->cnt) {
-            char*ptr_dest = arr->data;
-            ptr_dest = ptr_dest + (idx * size);
-    
-            char*ptr_src = arr->data;
-            ptr_src = ptr_src + (arr->cnt-1)*size;
-    
-            memcpy(ptr_dest, ptr_src, size);
-            arr->cnt--;
-        }
-        if (arr->cnt < arr->capacity/3) {
-                _array_resize(size, arr, 0, init_capacity);
-        }
-    }
-
-}
 
 #define arr_insert(Type,array,index,elem) _array_insert(sizeof(Type),array,index,elem, MIN_CAPACITY)
 __attribute__((nonnull(2,4)))
@@ -175,7 +187,7 @@ static inline void _array_remove(size_t size, dynarray_t *arr, size_t idx, size_
             arr->cnt--;
         }
         if (arr->cnt < arr->capacity/3) {
-                _array_resize(size, arr, 0, init_capacity);
+            _array_resize(size, arr, 0, init_capacity);
         }
     }
 }
@@ -184,13 +196,6 @@ static inline void _array_remove(size_t size, dynarray_t *arr, size_t idx, size_
 // void *_array_pop_front(size_t size, dynarray_t *arr, size_t init_capacity);
 
 #define arr_push_front(Type,array,elem) arr_insert(Type,array,0,elem)
-
-#define arr_free(array) _array_free(array)
-__attribute((nonnull(1)))
-static inline void _array_free(dynarray_t *arr) {
-    free(arr->data);
-    free(arr);
-}
 
 #define arr_concat(Type,array_one,array_two) _array_concat(sizeof(Type),array_one,array_two)
 __attribute((nonnull(2,3)))

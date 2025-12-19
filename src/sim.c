@@ -1,5 +1,6 @@
 #include "sim.h"
 #include "../lib/dynarray/dynarray.h"
+#include "../lib/raylib/raymath.h"
 #include "ui_renderer.h"
 
 #include <stdbool.h>
@@ -140,13 +141,13 @@ void sim_draw(sim_model *model) {
                 model->data_model->size[0], model->data_model->size[1], model->data_model->size[2], 
                 (Color){model->data_model->bg[0],model->data_model->bg[1],model->data_model->bg[2],255}
             );
-            Vector3 *vec;
-            float x = 0;
+            __attribute__((unused))
+            Vector3 *vec = NULL;
             arr_foreach(Vector3, vec, model->data_model->arr) {
-                DrawCube(*vec, x++, 10, 10, BLACK);
+                DrawCube(*vec, 10, 10, 10, BLACK);
             }
-            arr_filter(Vector3, vec, model->data_model->arr, vec->x==10) {
-                DrawCube(*vec, 10, x++, 10, RED);
+            arr_filter(Vector3, vec, model->data_model->arr, vec->y<20) {
+                DrawCube(*vec, 10, 10, 10, RED);
             }
         EndMode3D();
         murl_render(model->base_model->ctx);
@@ -156,14 +157,12 @@ void sim_draw(sim_model *model) {
 // update loop
 // ---
 void sim_update(sim_model *model) {
-    // data_model *data = model->data_model;
-    // // printf("test:\t%d\n",data.test);
-    // data->time += GetFrameTime();
-    // if (data->time > 1) {
-    //     printf("test:\t%d\n",data->test);
-    //     data->test += 10;
-    //     data->time = 0;
-    // }
+    data_model *data = model->data_model;
+    __attribute__((unused))
+    Vector3 *vec = NULL;
+    arr_foreach(Vector3, vec, data->arr) {
+        *vec = Vector3Add(*vec, Vector3Scale((Vector3){0,1,0},GetFrameTime()));
+    }
 }
 
 void sim_window(sim_model *model) {
@@ -190,8 +189,7 @@ void sim_destroy(sim_model *model) {
 // ---
 void sim_loop() {
 
-    Vector3 vec = {10,10,10};
-
+    
     data_model sim_data = (data_model){
         .test = 10,
         .time = 0.0,
@@ -201,6 +199,7 @@ void sim_loop() {
     };
     // Vector3 vec = {10,10,10};
     // arr_push(Vector3, sim_data.arr, &vec);
+    Vector3 vec = {10,10,10};
     sim_data.arr = arr_with(Vector3, 20, &vec);
 
     sim_model *model = sim_model_init(
