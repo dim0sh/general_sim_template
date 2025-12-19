@@ -140,8 +140,14 @@ void sim_draw(sim_model *model) {
                 model->data_model->size[0], model->data_model->size[1], model->data_model->size[2], 
                 (Color){model->data_model->bg[0],model->data_model->bg[1],model->data_model->bg[2],255}
             );
-            Vector3 *vec = arr_get(Vector3, model->data_model->arr, 0);
-            DrawCube(*vec, 10, 10, 10, BLACK);
+            Vector3 *vec;
+            float x = 0;
+            arr_foreach(Vector3, vec, model->data_model->arr) {
+                DrawCube(*vec, x++, 10, 10, BLACK);
+            }
+            arr_filter(Vector3, vec, model->data_model->arr, vec->x==10) {
+                DrawCube(*vec, 10, x++, 10, RED);
+            }
         EndMode3D();
         murl_render(model->base_model->ctx);
     EndDrawing();
@@ -183,15 +189,19 @@ void sim_destroy(sim_model *model) {
 // main loop
 // ---
 void sim_loop() {
+
+    Vector3 vec = {10,10,10};
+
     data_model sim_data = (data_model){
         .test = 10,
         .time = 0.0,
         .bg = { 90, 95, 100 },
         .size = {2.0,2.0,2.0},
-        .arr = arr(Vector3),
+        .arr = NULL,
     };
-    Vector3 vec = {10,10,10};
-    arr_push(Vector3, sim_data.arr, &vec);
+    // Vector3 vec = {10,10,10};
+    // arr_push(Vector3, sim_data.arr, &vec);
+    sim_data.arr = arr_with(Vector3, 20, &vec);
 
     sim_model *model = sim_model_init(
         1000, 
