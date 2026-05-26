@@ -1,7 +1,10 @@
+#define SIMULATION_IMPLEMENTATION
 #include "sim.h"
-#include <dynarray/dynarray.h>
-#include <raylib/raymath.h>
-#include <microui_renderer/ui_renderer.h>
+#define DYNARRAY_IMPLEMENTATION
+#include "../lib/dynarray/dynarray.h"
+#include "../lib/raylib/raylib.h"
+#include "../lib/raylib/raymath.h"
+#include "../lib/microui_renderer/ui_renderer.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -10,43 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-base_sim_model *base_sim_model_init(
-    int fps,
-    int window_width,
-    int window_height,
-    const char *title,
-    int camera_mode
-) {
-    base_sim_model *model = malloc(sizeof(*model));
-    model->fps = fps;
-    model->window_width = window_width;
-    model->window_height = window_height;
-    model->title = title;
-    model->camera_mode = camera_mode;
-    Camera camera = { 0 };
-    camera.position = (Vector3){ 20.0f, 20.0f, 20.0f };    
-    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      
-    camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          
-    camera.fovy = 104.0f;                                
-    camera.projection = CAMERA_PERSPECTIVE; 
-    model->camera = camera;
-    model->ctx = malloc(sizeof(mu_Context));
-    return model;
-}
-
-sim_model *sim_model_init(
-    int fps, 
-    int window_width, 
-    int window_height, 
-    const char *title, 
-    int camera_mode,
-    data_model *data_model
-) {
-    sim_model *model = malloc(sizeof(*model));
-    model->base_model = base_sim_model_init(fps, window_width, window_height, title, camera_mode);
-    model->data_model = data_model;
-    return model;
-}
+#include "dataset.h"
 
 void sim_init(sim_model *model, bool cursor) {
     InitWindow(model->base_model->window_width, model->base_model->window_height, model->base_model->title);
@@ -56,7 +23,8 @@ void sim_init(sim_model *model, bool cursor) {
     if (!cursor) {
         DisableCursor(); 
     }
-    mu_init(model->base_model->ctx);
+
+    mu_init(model->base_model->ui_ctx);
     /* try to load a larger custom font from the repo fonts folder; fallback to default */
     Font loaded = LoadFontEx("fonts/Science_Gothic/static/ScienceGothic-Regular.ttf", 32, NULL, 0);
     if (loaded.texture.id != 0) {
@@ -65,8 +33,8 @@ void sim_init(sim_model *model, bool cursor) {
         model->base_model->font = GetFontDefault();
     }
 
-    murl_setup_font_ex(model->base_model->ctx, &model->base_model->font);
-    model->base_model->ctx->style->size.x = 300;
+    murl_setup_font_ex(model->base_model->ui_ctx, &model->base_model->font);
+    model->base_model->ui_ctx->style->size.x = 300;
 }
 // ---
 // sim data
@@ -84,7 +52,7 @@ struct DataModel {
 
 // static float bg[3] = { 90, 95, 100 };
 void sim_ui(sim_model *model) {
-    mu_Context *ctx = model->base_model->ctx;
+    mu_Context *ctx = model->base_model->ui_ctx;
     float *bg = model->data_model->bg;
     float *size = model->data_model->size;
     murl_handle_input(ctx);
@@ -132,6 +100,10 @@ void sim_ui(sim_model *model) {
 // ---
 // draw loop
 // ---
+int draw_filter_condition(Vector3 * item) {
+    return item->y<20;
+}
+
 void sim_draw(sim_model *model) {
     BeginDrawing();
         ClearBackground(WHITE);
@@ -147,11 +119,11 @@ void sim_draw(sim_model *model) {
             arr_foreach(Vector3, vec, model->data_model->arr) {
                 DrawCube(*vec, 10, 10, 10, BLACK);
             }
-            arr_filter(Vector3, vec, model->data_model->arr, vec->y<20) {
+            arr_filter_each(Vector3, vec, model->data_model->arr, draw_filter_condition) {
                 DrawCube(*vec, 10, 10, 10, RED);
             }
         EndMode3D();
-        murl_render(model->base_model->ctx);
+        murl_render(model->base_model->ui_ctx);
     EndDrawing();
 }
 // ---
@@ -182,15 +154,13 @@ void sim_destroy(sim_model *model) {
     if (model->base_model->font.texture.id != GetFontDefault().texture.id) {
         UnloadFont(model->base_model->font);
     }
-    free(model->base_model->ctx);
+    free(model->base_model->ui_ctx);
     free(model->base_model);
 }
 // ---
 // main loop
 // ---
 void sim_loop() {
-
-    
     data_model sim_data = (data_model){
         .test = 10,
         .time = 0.0,

@@ -1,9 +1,9 @@
 #ifndef UI_RENDERER_H
 #define UI_RENDERER_H
 
-#include <raylib/raylib.h>
-#include <raylib/rlgl.h>
-#include <microui/microui.h>
+#include "../raylib/raylib.h"
+#include "../raylib/rlgl.h"
+#include "../microui/microui.h"
 
 #include <stddef.h>
 #include <stdint.h>
