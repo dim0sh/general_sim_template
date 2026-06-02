@@ -1,4 +1,5 @@
 #define SIMULATION_IMPLEMENTATION
+// #define SIM_MODE_2D
 #include "sim.h"
 #define DYNARRAY_IMPLEMENTATION
 #include "../lib/dynarray/dynarray.h"
@@ -6,14 +7,13 @@
 #include "../lib/raylib/raymath.h"
 #include "../lib/microui_renderer/ui_renderer.h"
 
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
-
-#include "dataset.h"
+// #include <stdlib.h>
 
 void sim_init(sim_model *model, bool cursor) {
     InitWindow(model->base_model->window_width, model->base_model->window_height, model->base_model->title);
@@ -107,7 +107,7 @@ int draw_filter_condition(Vector3 * item) {
 void sim_draw(sim_model *model) {
     BeginDrawing();
         ClearBackground(WHITE);
-        BeginMode3D(model->base_model->camera);
+        DrawingModeScope(model->base_model->camera,{
             DrawGrid(100, 10.0);
             DrawCube(
                 (Vector3){0.0,0.0,0.0},
@@ -122,7 +122,8 @@ void sim_draw(sim_model *model) {
             arr_filter_each(Vector3, vec, model->data_model->arr, draw_filter_condition) {
                 DrawCube(*vec, 10, 10, 10, RED);
             }
-        EndMode3D();
+            // DrawCircle(0, 0, 50, MAROON);
+        });
         murl_render(model->base_model->ui_ctx);
     EndDrawing();
 }
@@ -154,8 +155,6 @@ void sim_destroy(sim_model *model) {
     if (model->base_model->font.texture.id != GetFontDefault().texture.id) {
         UnloadFont(model->base_model->font);
     }
-    free(model->base_model->ui_ctx);
-    free(model->base_model);
 }
 // ---
 // main loop
@@ -182,9 +181,5 @@ void sim_loop() {
         &sim_data
     );
 
-    sim_init(model, true);           
-
-    sim_window(model);
-
-    sim_destroy(model);
+    simulate(model, true);           
 }

@@ -7,6 +7,14 @@
 
 #include <stdlib.h>
 
+#if !defined(SIM_MODE_3D) && !defined(SIM_MODE_2D)
+#define SIM_MODE_3D
+#endif
+
+#ifdef SIM_MODE_3D
+#define SimulationDrawingModeBegin(camera) BeginMode3D(camera)
+#define SimulationDrawingModeEnd() EndMode3D()
+
 typedef struct Base_SIM_Model {
     int fps;
     int window_width;
@@ -41,12 +49,61 @@ sim_model *sim_model_init(
     int camera_mode,
     data_model *data_model
 );
+#endif
 
-// void sim_init(sim_model *model, bool cursor);
-// void sim_update(sim_model *model);
-// void sim_draw(sim_model *model);
+#ifdef SIM_MODE_2D
+#define SimulationDrawingModeBegin(camera) BeginMode2D(camera)
+#define SimulationDrawingModeEnd() EndMode2D()
+
+typedef struct Base_SIM_Model {
+    int fps;
+    int window_width;
+    int window_height;
+    const char *title;
+    Camera2D camera;
+    float camera_zoom;
+    mu_Context *ui_ctx;
+    Font font;
+} base_sim_model;
+
+base_sim_model *base_sim_model_init(
+    int fps,
+    int window_width,
+    int window_height,
+    const char *title,
+    float camera_zoom
+);
+
+typedef struct DataModel data_model;
+
+typedef struct SimModel {
+    base_sim_model *base_model;
+    data_model *data_model;
+} sim_model;
+
+sim_model *sim_model_init(
+    int fps, 
+    int window_width, 
+    int window_height, 
+    const char *title, 
+    float camera_zoom,
+    data_model *data_model
+);
+
+
+#endif
+
+
+
+
+void sim_init(sim_model *model, bool cursor);
+void sim_update(sim_model *model);
+void sim_draw(sim_model *model);
+void sim_destroy(sim_model *model);
+void sim_window(sim_model *model);
 
 #ifdef SIMULATION_IMPLEMENTATION
+#ifdef SIM_MODE_3D
 base_sim_model *base_sim_model_init(
     int fps,
     int window_width,
@@ -85,6 +142,64 @@ sim_model *sim_model_init(
     return model;
 }
 #endif
+#ifdef SIM_MODE_2D
+base_sim_model *base_sim_model_init(
+    int fps,
+    int window_width,
+    int window_height,
+    const char *title,
+    float camera_zoom
+) {
+    base_sim_model *model = (base_sim_model*)malloc(sizeof(*model));
+    model->fps = fps;
+    model->window_width = window_width;
+    model->window_height = window_height;
+    model->title = title;
+    // model->camera_mode = camera_mode;
+    Camera2D camera = {0};
+    camera.zoom = 1.0f;
+    model->camera = camera;
+    model->ui_ctx = (mu_Context*)malloc(sizeof(mu_Context));
+    return model;
+}
+
+sim_model *sim_model_init(
+    int fps, 
+    int window_width, 
+    int window_height, 
+    const char *title, 
+    float camera_zoom,
+    data_model *data_model
+) {
+    sim_model *model = (sim_model*)malloc(sizeof(*model));
+    model->base_model = base_sim_model_init(fps, window_width, window_height, title, camera_zoom);
+    model->data_model = data_model;
+    return model;
+}
+#endif
+
+void internal_sim_destroy(sim_model *model) {
+    sim_destroy(model);
+
+    free(model->base_model->ui_ctx);
+    free(model->base_model);
+}
+
+void simulate(sim_model *model, bool cursor) {
+    sim_init(model, true);           
+
+    sim_window(model);
+
+    internal_sim_destroy(model);
+}
+
+#endif
+
+#define DrawingModeScope(camera,content) do{\
+    SimulationDrawingModeBegin(camera);\
+    {content};\
+    SimulationDrawingModeEnd();\
+}while(0)
 
 void sim_loop();
 
