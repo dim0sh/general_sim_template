@@ -46,6 +46,9 @@ typedef struct Base_SIM_Model {
     #endif
     mu_Context *ui_ctx;
     Font font;
+    #if defined DA_ST_CUSTOM_ALLOC
+    void * allocator;
+    #endif
 } base_sim_model;
 
 base_sim_model *base_sim_model_init(
@@ -125,6 +128,9 @@ base_sim_model *base_sim_model_init(
     model->camera = camera;
     #endif
     model->ui_ctx = (mu_Context*)DA_ST_REALLOC(allocator,NULL,sizeof(mu_Context));
+    #if defined DA_ST_CUSTOM_ALLOC
+    model->allocator = allocator;
+    #endif
     return model;
 }
 

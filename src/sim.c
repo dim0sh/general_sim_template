@@ -111,7 +111,6 @@ void sim_ui(sim_model *model) {
 // ---
 // draw loop
 // ---
-
 void sim_draw(sim_model *model) {
     BeginDrawing();
         ClearBackground(WHITE);
@@ -166,6 +165,7 @@ void sim_window(sim_model *model) {
 
 void sim_destroy(sim_model *model) {
     arr_free(model->data_model->arr);
+    arena_uninit(model->base_model->allocator);
     /* unload font if it was loaded from file (GetFontDefault() shares system font texture) */
     if (model->base_model->font.texture.id != GetFontDefault().texture.id) {
         UnloadFont(model->base_model->font);
@@ -189,7 +189,7 @@ void sim_loop() {
     // arr_push(Vector3, sim_data.arr, &vec);
 
     sim_model *model = sim_model_init(
-        2000, 
+        5000, 
         1920, 
         1080, 
         "General sim template", 
