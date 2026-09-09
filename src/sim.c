@@ -7,7 +7,6 @@
 #include "../lib/raylib/raymath.h"
 #include "../lib/microui_renderer/ui_renderer.h"
 
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -49,8 +48,6 @@ struct DataModel {
 // ---
 // ui declaration
 // ---
-
-// static float bg[3] = { 90, 95, 100 };
 void sim_ui(sim_model *model) {
     mu_Context *ctx = model->base_model->ui_ctx;
     float *bg = model->data_model->bg;
@@ -100,9 +97,6 @@ void sim_ui(sim_model *model) {
 // ---
 // draw loop
 // ---
-int draw_filter_condition(Vector3 * item) {
-    return item->y<20;
-}
 
 void sim_draw(sim_model *model) {
     BeginDrawing();
@@ -114,14 +108,13 @@ void sim_draw(sim_model *model) {
                 model->data_model->size[0], model->data_model->size[1], model->data_model->size[2], 
                 (Color){model->data_model->bg[0],model->data_model->bg[1],model->data_model->bg[2],255}
             );
-            __attribute__((unused))
-            Vector3 *vec = NULL;
-            arr_foreach(Vector3, vec, model->data_model->arr) {
+            arr_map(Vector3, model->data_model->arr, vec, {
                 DrawCube(*vec, 10, 10, 10, BLACK);
-            }
-            arr_filter_each(Vector3, vec, model->data_model->arr, draw_filter_condition) {
+            });
+            arr_filter_each(Vector3, model->data_model->arr, vec, (vec->y<20), {
                 DrawCube(*vec, 10, 10, 10, RED);
-            }
+            });
+
             // DrawCircle(0, 0, 50, MAROON);
         });
         murl_render(model->base_model->ui_ctx);
@@ -132,11 +125,9 @@ void sim_draw(sim_model *model) {
 // ---
 void sim_update(sim_model *model) {
     data_model *data = model->data_model;
-    __attribute__((unused))
-    Vector3 *vec = NULL;
-    arr_foreach(Vector3, vec, data->arr) {
+    arr_map(Vector3, data->arr, vec, {
         *vec = Vector3Add(*vec, Vector3Scale((Vector3){0,1,0},GetFrameTime()));
-    }
+    });
 }
 
 void sim_window(sim_model *model) {
@@ -165,15 +156,13 @@ void sim_loop() {
         .time = 0.0,
         .bg = { 90, 95, 100 },
         .size = {2.0,2.0,2.0},
-        .arr = NULL,
+        .arr = arr_with(Vector3, 20, &((Vector3){10,10,10})),
     };
     // Vector3 vec = {10,10,10};
     // arr_push(Vector3, sim_data.arr, &vec);
-    Vector3 vec = {10,10,10};
-    sim_data.arr = arr_with(Vector3, 20, &vec);
 
     sim_model *model = sim_model_init(
-        1000, 
+        2000, 
         1920, 
         1080, 
         "General sim template", 
