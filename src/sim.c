@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <stdio.h>
+// #include <time.h>
 // #include <stdlib.h>
 
 void sim_init(sim_model *model, bool cursor) {
@@ -122,13 +123,11 @@ void sim_draw(sim_model *model) {
                 (Color){model->data_model->bg[0],model->data_model->bg[1],model->data_model->bg[2],255}
             );
             arr_map(Vector3, model->data_model->arr, vec, {
-                DrawCube(*vec, 10, 10, 10, BLACK);
+                DrawCube(*vec, 2, 2, 2, BLACK);
             });
             arr_filter_each(Vector3, model->data_model->arr, vec, (vec->y<20), {
-                DrawCube(*vec, 10, 10, 10, RED);
+                DrawCube(*vec, 2, 2, 2, RED);
             });
-
-            // DrawCircle(0, 0, 50, MAROON);
         });
         murl_render(model->base_model->ui_ctx);
     EndDrawing();
@@ -138,8 +137,20 @@ void sim_draw(sim_model *model) {
 // ---
 void sim_update(sim_model *model) {
     data_model *data = model->data_model;
-    arr_map(Vector3, data->arr, vec, {
-        *vec = Vector3Add(*vec, Vector3Scale((Vector3){0,1,0},GetFrameTime()));
+    float cond_val = 15;
+    float x = -1;
+    float z = 1;
+    arr_filter_each(Vector3, data->arr, vec, (vec->y<cond_val), {
+        *vec = Vector3Add(*vec, Vector3Scale((Vector3){x,1,z},GetFrameTime()));
+        x += 2./(float)arr_len(data->arr);
+        z -= 2./(float)arr_len(data->arr);
+    });
+    x=1;
+    z=-1;
+    arr_filter_each(Vector3, data->arr, vec, (vec->y>cond_val), {
+        *vec = Vector3Add(*vec, Vector3Scale((Vector3){x,1,z},GetFrameTime()));
+        x -= 2./(float)arr_len(data->arr);
+        z += 2./(float)arr_len(data->arr);
     });
 }
 
@@ -164,6 +175,7 @@ void sim_destroy(sim_model *model) {
 // main loop
 // ---
 void sim_loop() {
+    // srand(time(NULL));
     arena_t * core_arena = arena_init(40e8);
 
     data_model sim_data = (data_model){
