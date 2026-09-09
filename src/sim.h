@@ -7,6 +7,15 @@
 
 #include <stdlib.h>
 
+#if defined(DA_ST_REALLOC) && !defined(DA_ST_FREE) || !defined(DA_ST_REALLOC) && defined(DA_ST_FREE)
+#error "The custom allocation flag (DA_ST_CUSTOM_ALLOC) must be defined and both realloc and free must be defined, one is not sufficient."
+#endif
+#if !defined(DA_ST_REALLOC) && !defined(DA_ST_FREE)
+#include <stdlib.h>
+#define DA_ST_REALLOC(allocator,pointer,size) realloc(pointer,size)
+#define DA_ST_FREE(allocator,pointer) free(pointer)
+#endif
+
 #if defined SIM_MODE_3D && defined SIM_MODE_2D
 #error "only one simulation mode permitted at one time"
 #endif
@@ -44,6 +53,7 @@ base_sim_model *base_sim_model_init(
     int window_width,
     int window_height,
     const char *title,
+    void * allocator,
     #if defined SIM_MODE_3D
     int camera_mode
     #elif defined SIM_MODE_2D
@@ -68,6 +78,9 @@ sim_model *sim_model_init(
     #elif defined SIM_MODE_2D
     float camera_zoom,
     #endif
+    #if defined DA_ST_CUSTOM_ALLOC
+    void * allocator,
+    #endif
     data_model *data_model
 );
 
@@ -84,13 +97,15 @@ base_sim_model *base_sim_model_init(
     int window_width,
     int window_height,
     const char *title,
+    void * allocator,
     #if defined SIM_MODE_3D
     int camera_mode
     #elif defined SIM_MODE_2D
     float camera_zoom
     #endif
 ) {
-    base_sim_model *model = (base_sim_model*)malloc(sizeof(*model));
+    // base_sim_model *model = (base_sim_model*)malloc(sizeof(*model));
+    base_sim_model *model = (base_sim_model*)DA_ST_REALLOC(allocator,NULL,sizeof(*model));
     model->fps = fps;
     model->window_width = window_width;
     model->window_height = window_height;
@@ -109,7 +124,7 @@ base_sim_model *base_sim_model_init(
     camera.zoom = 1.0f;
     model->camera = camera;
     #endif
-    model->ui_ctx = (mu_Context*)malloc(sizeof(mu_Context));
+    model->ui_ctx = (mu_Context*)DA_ST_REALLOC(allocator,NULL,sizeof(mu_Context));
     return model;
 }
 
@@ -123,13 +138,24 @@ sim_model *sim_model_init(
     #elif defined SIM_MODE_2D
     float camera_zoom,
     #endif
+    #if defined DA_ST_CUSTOM_ALLOC
+    void * allocator,
+    #endif
     data_model *data_model
 ) {
     sim_model *model = (sim_model*)malloc(sizeof(*model));
+    #if defined DA_ST_CUSTOM_ALLOC
     #if defined SIM_MODE_3D
-    model->base_model = base_sim_model_init(fps, window_width, window_height, title, camera_mode);
+    model->base_model = base_sim_model_init(fps, window_width, window_height, title, allocator, camera_mode);
     #elif defined SIM_MODE_2D
-    model->base_model = base_sim_model_init(fps, window_width, window_height, title, camera_zoom);
+    model->base_model = base_sim_model_init(fps, window_width, window_height, title, allocator, camera_zoom);
+    #endif
+    #else
+    #if defined SIM_MODE_3D
+    model->base_model = base_sim_model_init(fps, window_width, window_height, title, NULL, camera_mode);
+    #elif defined SIM_MODE_2D
+    model->base_model = base_sim_model_init(fps, window_width, window_height, title, NULL, camera_zoom);
+    #endif
     #endif
     model->data_model = data_model;
     return model;

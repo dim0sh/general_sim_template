@@ -1,3 +1,16 @@
+#define ARENA_IMPLEMENTATION
+#include "../lib/arena/arena.h"
+#define CUSTOM_REALLOC(allocator,pointer,size) arena_realloc(allocator,pointer,size)
+#define CUSTOM_FREE(allocator,pointer) arena_free(pointer)
+
+#define DA_ST_CUSTOM_ALLOC
+#define DA_ST_REALLOC   CUSTOM_REALLOC
+#define DA_ST_FREE      CUSTOM_FREE
+
+#define DA_ARR_CUSTOM_ALLOC
+#define DA_REALLOC      CUSTOM_REALLOC
+#define DA_FREE         CUSTOM_FREE
+
 #define SIMULATION_IMPLEMENTATION
 // #define SIM_MODE_2D
 #include "sim.h"
@@ -151,12 +164,14 @@ void sim_destroy(sim_model *model) {
 // main loop
 // ---
 void sim_loop() {
+    arena_t * core_arena = arena_init(40e8);
+
     data_model sim_data = (data_model){
         .test = 10,
         .time = 0.0,
         .bg = { 90, 95, 100 },
         .size = {2.0,2.0,2.0},
-        .arr = arr_with(Vector3, 20, &((Vector3){10,10,10})),
+        .arr = arr_with(Vector3, core_arena, 20, &((Vector3){10,10,10})),
     };
     // Vector3 vec = {10,10,10};
     // arr_push(Vector3, sim_data.arr, &vec);
@@ -167,6 +182,7 @@ void sim_loop() {
         1080, 
         "General sim template", 
         CAMERA_ORTHOGRAPHIC,
+        core_arena,
         &sim_data
     );
 
