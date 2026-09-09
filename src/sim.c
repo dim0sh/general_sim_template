@@ -49,9 +49,9 @@ void sim_init(sim_model *model, bool cursor) {
     murl_setup_font_ex(model->base_model->ui_ctx, &model->base_model->font);
     model->base_model->ui_ctx->style->size.x = 300;
 }
-// ---
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 // sim data
-// ---
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 struct DataModel {
     int test;
     float time;
@@ -59,9 +59,9 @@ struct DataModel {
     float size[3];
     dynarray_t * arr;
 };
-// ---
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 // ui declaration
-// ---
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 void sim_ui(sim_model *model) {
     mu_Context *ctx = model->base_model->ui_ctx;
     float *bg = model->data_model->bg;
@@ -108,9 +108,9 @@ void sim_ui(sim_model *model) {
     }
     mu_end(ctx);
 }
-// ---
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 // draw loop
-// ---
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 void sim_draw(sim_model *model) {
     BeginDrawing();
         ClearBackground(WHITE);
@@ -131,9 +131,9 @@ void sim_draw(sim_model *model) {
         murl_render(model->base_model->ui_ctx);
     EndDrawing();
 }
-// ---
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 // update loop
-// ---
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 void sim_update(sim_model *model) {
     data_model *data = model->data_model;
     float cond_val = 15;
@@ -171,9 +171,9 @@ void sim_destroy(sim_model *model) {
         UnloadFont(model->base_model->font);
     }
 }
-// ---
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 // main loop
-// ---
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 void sim_loop() {
     // srand(time(NULL));
     arena_t * core_arena = arena_init(40e8);
